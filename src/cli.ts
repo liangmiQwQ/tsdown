@@ -175,18 +175,26 @@ function camelizeFlags(flags: Record<string, any>, path?: string): void {
   }
 }
 
-export function parseCLI(argv: string[]): ReturnType<CAC['parse']> {
+/** Parses and validates arguments without running a command. Help and version flags still print output. */
+export function parseCLI(
+  argv: string[],
+): ReturnType<CAC['parse']> & { command: string | undefined } {
+  cli.unsetMatchedCommand()
   const parsed = cli.parse(argv, { run: false })
+  // CAC normally validates when running the action; standalone callers need the same checks.
+  const command = cli.matchedCommand
+  command?.checkUnknownOptions()
+  command?.checkOptionValue()
+  command?.checkRequiredArgs()
+  command?.checkUnusedArgs()
   camelizeFlags(parsed.options)
-  return parsed
+  return { ...parsed, command: command?.name }
 }
 
 export async function runCLI(): Promise<void> {
-  const { options } = parseCLI(process.argv)
-
-  enableDebug(options.debug)
-
   try {
+    const { options } = parseCLI(process.argv)
+    enableDebug(options.debug)
     await cli.runMatchedCommand()
   } catch (error: any) {
     globalLogger.error(String(error.stack || error.message))

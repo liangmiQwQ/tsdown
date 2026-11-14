@@ -2,6 +2,26 @@
 
 All CLI flags can also be set in the configuration file, which improves reusability and maintainability for complex projects. Conversely, any option can be overridden by CLI flags, even if not explicitly listed on this page. For more details, see the [Config File](../options/config-file.md) documentation.
 
+## Programmatic Parsing
+
+Import `parseCLI` from `tsdown/cli` to reuse tsdown's argument parsing without executing a build or subcommand:
+
+```ts
+import { parseCLI } from 'tsdown/cli'
+
+const { args, options, command } = parseCLI([
+  'node',
+  'tsdown',
+  'src/index.ts',
+  '--format',
+  'esm',
+])
+```
+
+Pass the full argument vector, including the executable and script name, as in `process.argv`. The result contains positional `args`, normalized `options`, and `command`: an empty string for the default build command, a subcommand name, or `undefined` when help or version output has handled the request.
+
+Parsing validates arguments and throws on invalid option values. Help and version flags still print their output; callers should return when `options.help` or `options.version` is set. Positional entries remain in `args` and are not automatically assigned to `options.entry`.
+
 ## CLI Flag Patterns
 
 The mapping between CLI flags and configuration options follows these rules:

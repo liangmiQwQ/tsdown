@@ -1,11 +1,34 @@
-import { describe, expect, it } from 'vitest'
-import { parseCLI } from './cli.ts'
+import { parseCLI } from 'tsdown/cli'
+import { describe, expect, it, vi } from 'vitest'
 
 function parse(...args: string[]): Record<string, any> {
   return parseCLI(['node', 'tsdown', ...args]).options
 }
 
 describe('parseCLI', () => {
+  it('validates required option values without running a command', () => {
+    expect(() => parse('--target')).toThrow('value is missing')
+    expect(parse('--target', 'es2022').target).toBe('es2022')
+  })
+
+  it('identifies subcommands without executing them', () => {
+    expect(parseCLI(['node', 'tsdown', 'create']).command).toBe('create')
+    expect(parseCLI(['node', 'tsdown', 'migrate']).command).toBe('migrate')
+    expect(parseCLI(['node', 'tsdown', 'src/index.ts']).command).toBe('')
+  })
+
+  it('prints help without validating or running the command', () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {})
+    try {
+      const parsed = parseCLI(['node', 'tsdown', '--help', '--target'])
+      expect(parsed.options.help).toBe(true)
+      expect(parsed.command).toBeUndefined()
+      expect(info).toHaveBeenCalledWith(expect.stringContaining('Usage:'))
+    } finally {
+      info.mockRestore()
+    }
+  })
+
   it('camel-cases nested option keys', () => {
     expect(parse('--deps.never-bundle', 'leftpad').deps).toEqual({
       neverBundle: 'leftpad',

@@ -23,6 +23,10 @@
       "dev": "./src/index.ts",
       "default": "./dist/index.mjs"
     },
+    "./cli": {
+      "dev": "./src/cli.ts",
+      "default": "./dist/cli.mjs"
+    },
     "./config": {
       "dev": "./src/config.ts",
       "default": "./dist/config.mjs"
@@ -55,6 +59,7 @@
     "access": "public",
     "exports": {
       ".": "./dist/index.mjs",
+      "./cli": "./dist/cli.mjs",
       "./config": "./dist/config.mjs",
       "./internal": "./dist/internal.mjs",
       "./plugins": "./dist/plugins.mjs",
