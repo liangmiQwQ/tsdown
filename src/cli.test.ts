@@ -17,16 +17,23 @@ describe('parseCLI', () => {
     expect(parseCLI(['node', 'tsdown', 'src/index.ts']).command).toBe('')
   })
 
-  it('prints help without validating or running the command', () => {
+  it('parses help and version without printing or validating build arguments', () => {
     const info = vi.spyOn(console, 'info').mockImplementation(() => {})
     try {
       const parsed = parseCLI(['node', 'tsdown', '--help', '--target'])
       expect(parsed.options.help).toBe(true)
-      expect(parsed.command).toBeUndefined()
-      expect(info).toHaveBeenCalledWith(expect.stringContaining('Usage:'))
+      expect(parsed.command).toBe('')
+      expect(parse('--version').version).toBe(true)
+      expect(info).not.toHaveBeenCalled()
     } finally {
       info.mockRestore()
     }
+  })
+
+  it('treats subcommand names as entries when subcommands are disabled', () => {
+    expect(
+      parseCLI(['node', 'tsdown', 'create'], { subcommands: false }).args,
+    ).toEqual(['create'])
   })
 
   it('camel-cases nested option keys', () => {

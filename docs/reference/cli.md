@@ -18,9 +18,11 @@ const { args, options, command } = parseCLI([
 ])
 ```
 
-Pass the full argument vector, including the executable and script name, as in `process.argv`. The result contains positional `args`, normalized `options`, and `command`: an empty string for the default build command, a subcommand name, or `undefined` when help or version output has handled the request.
+Pass the full argument vector, including the executable and script name, as in `process.argv`. The result contains positional `args`, normalized `options`, and `command`: an empty string for the default build command, a subcommand name, or `undefined` when no command is matched.
 
-Parsing validates arguments and throws on invalid option values. Help and version flags still print their output; callers should return when `options.help` or `options.version` is set. Positional entries remain in `args` and are not automatically assigned to `options.entry`.
+Pass `{ subcommands: false }` as the second argument to treat names such as `create` and `migrate` as build entries. Each call uses independent parser state.
+
+Parsing validates arguments and throws on invalid option values. Help and version flags are returned without printing or validating incomplete build arguments; callers handle `options.help` and `options.version` themselves. Positional entries remain in `args` and are not automatically assigned to `options.entry`.
 
 ## CLI Flag Patterns
 

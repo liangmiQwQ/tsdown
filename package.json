@@ -24,7 +24,7 @@
       "default": "./dist/index.mjs"
     },
     "./cli": {
-      "dev": "./src/cli.ts",
+      "dev": "./src/parse-cli.ts",
       "default": "./dist/cli.mjs"
     },
     "./config": {

@@ -7,7 +7,14 @@ import { defineConfig } from './src/config.ts'
 
 export default defineConfig([
   {
-    entry: ['./src/{index,run,cli,plugins,config,internal}.ts'],
+    entry: {
+      index: './src/index.ts',
+      run: './src/run.ts',
+      cli: './src/parse-cli.ts',
+      plugins: './src/plugins.ts',
+      config: './src/config.ts',
+      internal: './src/internal.ts',
+    },
     name: 'tsdown',
     deps: {
       onlyBundle: [

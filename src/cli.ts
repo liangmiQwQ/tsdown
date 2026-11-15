@@ -1,4 +1,3 @@
-/* eslint-disable unicorn/no-top-level-side-effects */
 import process from 'node:process'
 import { cac, type CAC } from 'cac'
 import { VERSION as rolldownVersion } from 'rolldown'
@@ -9,126 +8,134 @@ import { globalLogger } from './utils/logger.ts'
 import { styleText } from './utils/style.ts'
 import type { UserConfig } from './config.ts'
 
-const cli = cac('tsdown')
-cli.help().version(pkg.version)
+function createCLI(subcommands = true): CAC {
+  const cli = cac('tsdown')
+  cli.help().version(pkg.version)
 
-cli
-  .command('[...files]', 'Bundle files', {
-    ignoreOptionDefaultValue: true,
-    allowUnknownOptions: true,
-  })
-  .option('-c, --config <filename>', 'Use a custom config file')
-  .option(
-    '--config-loader <loader>',
-    'Config loader to use: auto, native, tsx, unrun',
-    { default: 'auto' },
-  )
-  .option('--no-config', 'Disable config file')
-  .option('-f, --format <format>', 'Bundle format: esm, cjs, iife, umd', {
-    default: 'esm',
-  })
-  .option('--clean', 'Clean output directory, --no-clean to disable')
-  .option('--deps.never-bundle <module>', 'Mark dependencies as external')
-  .option('--minify', 'Minify output')
-  .option('--devtools', 'Enable devtools integration')
-  .option('--debug [feat]', 'Show debug logs')
-  .option('--target <target>', 'Bundle target, e.g "es2015", "esnext"')
-  .option('-l, --logLevel <level>', 'Set log level: info, warn, error, silent')
-  .option('--fail-on-warn', 'Fail on warnings', { default: true })
-  .option(
-    '--no-write',
-    'Disable writing files to disk, incompatible with watch mode',
-  )
-  .option('-d, --out-dir <dir>', 'Output directory', { default: 'dist' })
-  .option('--treeshake', 'Tree-shake bundle', { default: true })
-  .option('--sourcemap', 'Generate source map', { default: false })
-  .option('--shims', 'Enable cjs and esm shims ', { default: false })
-  .option('--platform <platform>', 'Target platform', {
-    default: 'node',
-  })
-  .option('--dts', 'Generate dts files')
-  .option('--publint', 'Enable publint', { default: false })
-  .option('--attw', 'Enable Are the types wrong integration', {
-    default: false,
-  })
-  .option('--unused', 'Enable unused dependencies check', { default: false })
-  .option('-w, --watch [path]', 'Watch mode')
-  .option('--ignore-watch <path>', 'Ignore custom paths in watch mode')
-  .option('--from-vite [vitest]', 'Reuse config from Vite or Vitest')
-  .option('--report', 'Size report', { default: true })
-  .option('--env.* <value>', 'Define compile-time env variables')
-  .option(
-    '--env-file <file>',
-    'Load environment variables from a file, can be repeated',
-  )
-  .option(
-    '--env-prefix <prefix>',
-    'Prefix for env variables to inject into the bundle',
-    { default: 'TSDOWN_' },
-  )
-  .option('--on-success <command>', 'Command to run on success')
-  .option('--copy <dir>', 'Copy files to output dir')
-  .option('--tsconfig <tsconfig>', 'Set tsconfig path')
-  .option('--unbundle', 'Unbundle mode')
-  .option('--root <dir>', 'Root directory of input files')
-  .option('--exe', 'Bundle as executable')
-  .option('-W, --workspace [dir]', 'Enable workspace mode')
-  .option(
-    '--concurrency <count>',
-    'Maximum number of Rolldown builds to run in parallel',
-  )
-  .option(
-    '-F, --filter <pattern>',
-    'Filter configs (cwd or name), e.g. /pkg-name$/ or pkg-name',
-  )
-  .option('--exports', 'Generate package exports for package.json')
-  .action(async (input: string[], flags: UserConfig) => {
-    globalLogger.level = flags.logLevel || 'info'
-    globalLogger.info(
-      `${styleText.blue(`tsdown v${pkg.version}`)} powered by ${styleText[
-        '#ff7e17,yellow'
-      ](`rolldown v${rolldownVersion}`)}`,
+  cli
+    .command('[...files]', 'Bundle files', {
+      ignoreOptionDefaultValue: true,
+      allowUnknownOptions: true,
+    })
+    .option('-c, --config <filename>', 'Use a custom config file')
+    .option(
+      '--config-loader <loader>',
+      'Config loader to use: auto, native, tsx, unrun',
+      { default: 'auto' },
     )
-    const { build } = await import('./build.ts')
-    if (input.length > 0) flags.entry = input
-    await build(flags)
-  })
+    .option('--no-config', 'Disable config file')
+    .option('-f, --format <format>', 'Bundle format: esm, cjs, iife, umd', {
+      default: 'esm',
+    })
+    .option('--clean', 'Clean output directory, --no-clean to disable')
+    .option('--deps.never-bundle <module>', 'Mark dependencies as external')
+    .option('--minify', 'Minify output')
+    .option('--devtools', 'Enable devtools integration')
+    .option('--debug [feat]', 'Show debug logs')
+    .option('--target <target>', 'Bundle target, e.g "es2015", "esnext"')
+    .option(
+      '-l, --logLevel <level>',
+      'Set log level: info, warn, error, silent',
+    )
+    .option('--fail-on-warn', 'Fail on warnings', { default: true })
+    .option(
+      '--no-write',
+      'Disable writing files to disk, incompatible with watch mode',
+    )
+    .option('-d, --out-dir <dir>', 'Output directory', { default: 'dist' })
+    .option('--treeshake', 'Tree-shake bundle', { default: true })
+    .option('--sourcemap', 'Generate source map', { default: false })
+    .option('--shims', 'Enable cjs and esm shims ', { default: false })
+    .option('--platform <platform>', 'Target platform', {
+      default: 'node',
+    })
+    .option('--dts', 'Generate dts files')
+    .option('--publint', 'Enable publint', { default: false })
+    .option('--attw', 'Enable Are the types wrong integration', {
+      default: false,
+    })
+    .option('--unused', 'Enable unused dependencies check', { default: false })
+    .option('-w, --watch [path]', 'Watch mode')
+    .option('--ignore-watch <path>', 'Ignore custom paths in watch mode')
+    .option('--from-vite [vitest]', 'Reuse config from Vite or Vitest')
+    .option('--report', 'Size report', { default: true })
+    .option('--env.* <value>', 'Define compile-time env variables')
+    .option(
+      '--env-file <file>',
+      'Load environment variables from a file, can be repeated',
+    )
+    .option(
+      '--env-prefix <prefix>',
+      'Prefix for env variables to inject into the bundle',
+      { default: 'TSDOWN_' },
+    )
+    .option('--on-success <command>', 'Command to run on success')
+    .option('--copy <dir>', 'Copy files to output dir')
+    .option('--tsconfig <tsconfig>', 'Set tsconfig path')
+    .option('--unbundle', 'Unbundle mode')
+    .option('--root <dir>', 'Root directory of input files')
+    .option('--exe', 'Bundle as executable')
+    .option('-W, --workspace [dir]', 'Enable workspace mode')
+    .option(
+      '--concurrency <count>',
+      'Maximum number of Rolldown builds to run in parallel',
+    )
+    .option(
+      '-F, --filter <pattern>',
+      'Filter configs (cwd or name), e.g. /pkg-name$/ or pkg-name',
+    )
+    .option('--exports', 'Generate package exports for package.json')
+    .action(async (input: string[], flags: UserConfig) => {
+      globalLogger.level = flags.logLevel || 'info'
+      globalLogger.info(
+        `${styleText.blue(`tsdown v${pkg.version}`)} powered by ${styleText[
+          '#ff7e17,yellow'
+        ](`rolldown v${rolldownVersion}`)}`,
+      )
+      const { build } = await import('./build.ts')
+      if (input.length > 0) flags.entry = input
+      await build(flags)
+    })
 
-cli
-  .command(
-    'create',
-    '[deprecated] Create a tsdown project. Use "npx create-tsdown" instead.',
-    { allowUnknownOptions: true },
-  )
-  .action(async () => {
-    globalLogger.warn(
-      `"tsdown create" is deprecated. Please use "npx create-tsdown" instead.`,
-    )
-    const { exitCode } = await x(
-      'npx',
-      ['-y', 'create-tsdown@latest', ...process.argv.slice(3)],
-      { nodeOptions: { stdio: 'inherit' } },
-    )
-    process.exitCode = exitCode
-  })
+  if (subcommands) {
+    cli
+      .command(
+        'create',
+        '[deprecated] Create a tsdown project. Use "npx create-tsdown" instead.',
+        { allowUnknownOptions: true },
+      )
+      .action(async () => {
+        globalLogger.warn(
+          `"tsdown create" is deprecated. Please use "npx create-tsdown" instead.`,
+        )
+        const { exitCode } = await x(
+          'npx',
+          ['-y', 'create-tsdown@latest', ...process.argv.slice(3)],
+          { nodeOptions: { stdio: 'inherit' } },
+        )
+        process.exitCode = exitCode
+      })
 
-cli
-  .command(
-    'migrate',
-    '[deprecated] Migrate from tsup to tsdown. Use "npx tsdown-migrate" instead.',
-    { allowUnknownOptions: true },
-  )
-  .action(async () => {
-    globalLogger.warn(
-      `"tsdown migrate" is deprecated. Please use "npx tsdown-migrate" instead.`,
-    )
-    const { exitCode } = await x(
-      'npx',
-      ['-y', 'tsdown-migrate@latest', ...process.argv.slice(3)],
-      { nodeOptions: { stdio: 'inherit' } },
-    )
-    process.exitCode = exitCode
-  })
+    cli
+      .command(
+        'migrate',
+        '[deprecated] Migrate from tsup to tsdown. Use "npx tsdown-migrate" instead.',
+        { allowUnknownOptions: true },
+      )
+      .action(async () => {
+        globalLogger.warn(
+          `"tsdown migrate" is deprecated. Please use "npx tsdown-migrate" instead.`,
+        )
+        const { exitCode } = await x(
+          'npx',
+          ['-y', 'tsdown-migrate@latest', ...process.argv.slice(3)],
+          { nodeOptions: { stdio: 'inherit' } },
+        )
+        process.exitCode = exitCode
+      })
+  }
+  return cli
+}
 
 /**
  * Options whose nested keys are user-defined values (environment variable
@@ -175,25 +182,45 @@ function camelizeFlags(flags: Record<string, any>, path?: string): void {
   }
 }
 
-/** Parses and validates arguments without running a command. Help and version flags still print output. */
+export interface CLIParseResult {
+  args: string[]
+  options: Record<string, any>
+  command: string | undefined
+}
+
+/** Parses arguments without printing help/version output or executing a command. */
 export function parseCLI(
   argv: string[],
-): ReturnType<CAC['parse']> & { command: string | undefined } {
-  cli.unsetMatchedCommand()
+  options: { subcommands?: boolean } = {},
+): CLIParseResult {
+  const cli = createCLI(options.subcommands)
+  cli.showHelpOnExit = false
+  cli.showVersionOnExit = false
+  return parseArguments(cli, argv)
+}
+
+function parseArguments(cli: CAC, argv: string[]): CLIParseResult {
   const parsed = cli.parse(argv, { run: false })
-  // CAC normally validates when running the action; standalone callers need the same checks.
+  // Help/version requests must not validate incomplete build arguments.
   const command = cli.matchedCommand
-  command?.checkUnknownOptions()
-  command?.checkOptionValue()
-  command?.checkRequiredArgs()
-  command?.checkUnusedArgs()
+  if (!parsed.options.help && !parsed.options.version) {
+    command?.checkUnknownOptions()
+    command?.checkOptionValue()
+    command?.checkRequiredArgs()
+    command?.checkUnusedArgs()
+  }
   camelizeFlags(parsed.options)
-  return { ...parsed, command: command?.name }
+  return {
+    args: [...parsed.args],
+    options: parsed.options,
+    command: command?.name,
+  }
 }
 
 export async function runCLI(): Promise<void> {
   try {
-    const { options } = parseCLI(process.argv)
+    const cli = createCLI()
+    const { options } = parseArguments(cli, process.argv)
     enableDebug(options.debug)
     await cli.runMatchedCommand()
   } catch (error: any) {
